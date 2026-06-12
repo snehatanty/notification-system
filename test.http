@@ -1,0 +1,23 @@
+### Step 1 - Create a user first
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "Sneha Tanty",
+  "email": "sneha@test.com",
+  "preferredChannel": "EMAIL"
+}
+
+### Step 2 - Send a notification
+POST http://localhost:8080/api/notifications
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "type": "EMAIL",
+  "subject": "Welcome!",
+  "message": "Hello from notification system"
+}
+
+### Step 3 - Get notifications for user
+GET http://localhost:8080/api/notifications/1
