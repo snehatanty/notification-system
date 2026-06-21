@@ -16,8 +16,23 @@ public class NotificationService {
 
     private final NotificationRepository repository;
     private final NotificationProducer producer;
+    private final RateLimiterService rateLimiterService;
 
     public Notification create(NotificationRequest req) {
+        String channel = req.getType().name();
+
+        if (!rateLimiterService.isAllowed(req.getUserId(), channel)) {
+            Notification n = new Notification();
+            n.setUserId(req.getUserId());
+            n.setType(req.getType());
+            n.setSubject(req.getSubject());
+            n.setMessage(req.getMessage());
+            n.setStatus(Notification.NotificationStatus.RATE_LIMITED);
+            Notification saved = repository.save(n);
+            log.warn("Notification rate limited for userId={}", req.getUserId());
+            return saved;
+        }
+
         Notification n = new Notification();
         n.setUserId(req.getUserId());
         n.setType(req.getType());
@@ -26,7 +41,6 @@ public class NotificationService {
         n.setStatus(Notification.NotificationStatus.QUEUED);
 
         Notification saved = repository.save(n);
-
         producer.sendNotification(saved);
 
         log.info("Notification id={} created and queued", saved.getId());
